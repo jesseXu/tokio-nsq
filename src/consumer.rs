@@ -303,7 +303,11 @@ async fn lookup_supervisor(
     from_connections_tx: tokio::sync::mpsc::Sender<NSQEvent>,
 ) {
     loop {
+
+
         let f = lookup(&address, &config, &clients_ref, &from_connections_tx);
+
+        info!("Teset Info Log - lookup");
 
         if let Err(generic) = f.await {
             error!("lookup_supervisor unknown error {}", generic);
