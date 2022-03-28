@@ -290,10 +290,12 @@ async fn read_frame_data<S: AsyncRead + std::marker::Unpin>(
             let mut message_id = [0; 16];
             stream.read_exact(&mut message_id).await?;
 
-            let body_size = frame_body_size - 8 - 2 - 16 - 2; // Specific Format for Longbridge 
+            let body_size = frame_body_size - 8 - 2 - 16 - 2; // Specific Format for Longbridge
             let mut message_body = Vec::new();
             message_body.resize(body_size as usize, 0);
             stream.read_exact(&mut message_body).await?;
+
+            let _ = stream.read_u16().await?; // Specific Format for Longbridge
 
             Ok(Frame::Message(FrameMessage {
                 timestamp: message_timestamp,
