@@ -218,9 +218,13 @@ async fn lookup(
 
     let uri = raw_uri.parse::<hyper::Uri>()?;
 
+    info!("lookup uri {:?} - {:?}", raw_uri, uri);
+
     let client = hyper::Client::new();
 
     let response = client.get(uri).await?;
+
+    info!("lookup response {:?}", response);
 
     let buffer = hyper::body::to_bytes(response).await?;
 
