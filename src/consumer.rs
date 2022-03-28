@@ -230,7 +230,12 @@ async fn lookup(
 
     let buffer = hyper::body::to_bytes(response).await?;
 
+    info!("lookup response buffer {:?}", buffer);
+
     let lookup_response: LookupResponse = serde_json::from_slice(&buffer)?;
+
+    info!("lookup response - parsed {:?}", lookup_response);
+
     let mut new_clients = Vec::new();
 
     {
