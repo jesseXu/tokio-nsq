@@ -216,7 +216,7 @@ async fn lookup(
     let raw_uri = (address.to_owned() + "/lookup?topic=" + &config.topic.topic)
         .to_string();
 
-    info!("raw_uri", raw_uri);
+    info!("raw_uri {:?}", raw_uri);
 
     let uri = raw_uri.parse::<hyper::Uri>()?;
 
