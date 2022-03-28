@@ -234,8 +234,6 @@ async fn lookup(
 
     let lookup_response: LookupResponse = serde_json::from_slice(&buffer)?;
 
-    info!("lookup response - parsed {:?}", lookup_response);
-
     let mut new_clients = Vec::new();
 
     {
@@ -245,6 +243,8 @@ async fn lookup(
             let address = producer.broadcast_address.clone()
                 + ":"
                 + &producer.tcp_port.to_string();
+
+            info!("producers {}", address);
 
             match guard.get_mut(&address) {
                 Some(context) => {
