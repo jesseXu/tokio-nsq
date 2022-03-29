@@ -700,7 +700,8 @@ async fn run_connection(state: &mut NSQDConnectionState) -> Result<(), Error> {
     let identify_body = IdentifyBody {
         client_id: state.config.shared.client_id.clone(),
         feature_negotiation: true,
-        tls_v1: state.config.shared.tls.is_some(),
+//        tls_v1: state.config.shared.tls.is_some(),
+        tls_v1: true,
         sample_rate: state.config.sample_rate.map(|rate| rate.get()),
         deflate: matches!(
             state.config.shared.compression,
