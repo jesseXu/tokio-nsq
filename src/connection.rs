@@ -243,7 +243,7 @@ async fn read_frame_data<S: AsyncRead + std::marker::Unpin>(
     stream: &mut S,
 ) -> Result<Frame, Error> {
     let frame_size = stream.read_u32().await?;
-
+ 
     if frame_size < 4 {
         return Err(Error::from(ProtocolError {
             message: "frame_size less than 4 bytes".to_string(),
@@ -287,22 +287,44 @@ async fn read_frame_data<S: AsyncRead + std::marker::Unpin>(
             let message_timestamp = stream.read_u64().await?;
             let message_attempts = stream.read_u16().await?;
 
-            let mut message_id = [0; 16];
-            stream.read_exact(&mut message_id).await?;
+            let mut m_bytes = message_timestamp.to_ne_bytes();
+            if m_bytes[0] != 149 {
+                let mut message_id = [0; 16];
+                stream.read_exact(&mut message_id).await?;
 
-            let body_size = frame_body_size - 8 - 2 - 16 - 2; // Specific Format for Longbridge
-            let mut message_body = Vec::new();
-            message_body.resize(body_size as usize, 0);
-            stream.read_exact(&mut message_body).await?;
+                let body_size = frame_body_size - 8 - 2 - 16;
+                let mut message_body = Vec::new();
+                message_body.resize(body_size as usize, 0);
+                stream.read_exact(&mut message_body).await?;
 
-            let _ = stream.read_u16().await?; // Specific Format for Longbridge
+                Ok(Frame::Message(FrameMessage {
+                    timestamp: message_timestamp,
+                    attempt: message_attempts,
+                    id: message_id,
+                    body: message_body,
+                }))
 
-            Ok(Frame::Message(FrameMessage {
-                timestamp: message_timestamp,
-                attempt: message_attempts,
-                id: message_id,
-                body: message_body,
-            }))
+            } else {
+                m_bytes[0] = m_bytes[0] - 128;
+                let n_message_timestamp = u64::from_ne_bytes(m_bytes);
+
+                let mut message_id = [0; 16];
+                stream.read_exact(&mut message_id).await?;
+
+                let body_size = frame_body_size - 8 - 2 - 16 - 2; // Specific Format for Longbridge
+                let mut message_body = Vec::new();
+                message_body.resize(body_size as usize, 0);
+                stream.read_exact(&mut message_body).await?;
+
+                let _ = stream.read_u16().await?; // Specific Format for Longbridge: Read Group
+
+                Ok(Frame::Message(FrameMessage {
+                    timestamp: n_message_timestamp,
+                    attempt: message_attempts,
+                    id: message_id,
+                    body: message_body,
+                }))
+            }
         }
         _ => {
             error!("frame_type unknown = {}", frame_type);
